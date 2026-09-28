@@ -123,5 +123,5 @@ class Patient:
 # prints the patients in the new, filtered list and adds a border to the bottom of the list
         for patient in new_list:
             print(patient)
-        print("/////////////////////////////")
+        print("/////////////////////////////////////")
         return new_list
