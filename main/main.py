@@ -1,0 +1,416 @@
+# imports the Patient file and other libraries
+from main_patients import *
+import csv 
+import matplotlib.pyplot as plt
+from scipy import stats
+import numpy as np
+import statistics
+import math as math
+from sklearn.linear_model import LinearRegression
+
+#creates patient objects for all rows of data in the csv file
+Patient.instantiate_from_csv("patientdata.csv")
+
+# sorts the data by age and then by whether they have dementia or not, thus two groups in numerical order
+# and then prints all patients in all_patients
+Patient.all_patients.sort(key = Patient.get_age, reverse = False)
+Patient.all_patients.sort(key = Patient.get_dementia, reverse = True)
+for patient in Patient.all_patients: 
+    print(patient)
+
+# lists to hold all female brain pH values and male brain pH values
+female_ph = []
+male_ph = []
+
+# variables to hold the sums of all pH values for females and males
+ft_ph = 0.0
+mt_ph = 0.0
+
+# variables to hold the mean of the pH values for females and males to then use as the bars on the graph
+f_bar = 0.0
+m_bar = 0.0
+
+# variables to hold the standard deviations of the female and male brain pH data sets
+f_std = 0.0
+m_std = 0.0
+
+# the next two sections filter the data to separate the female/male patients with dementia and then extract their brain pH into two separate lists
+Patient.some_patients = Patient.filter_patients(sex = "F", cognitive_status = "Dementia")
+for patient in Patient.some_patients:
+    female_ph.append(patient.get_brain_ph())
+
+Patient.some_patients = Patient.filter_patients(sex = "M", cognitive_status = "Dementia")
+for patient in Patient.some_patients:
+    male_ph.append(patient.get_brain_ph())
+
+# summing of all pH values of each sex to use to find the mean
+for each in female_ph:
+    ft_ph += each
+
+for each in male_ph:
+    mt_ph += each
+
+# calculating the mean pH to use as the bar in the bar graph
+f_bar = math.trunc(ft_ph * 1000 / (len(female_ph))) / 1000
+m_bar = math.trunc(mt_ph * 1000 / (len(male_ph))) / 1000
+
+# calculating the standard deviation of the two brain pH data sets
+f_std = math.trunc(statistics.stdev(female_ph) * 1000) / 1000
+m_std = math.trunc(statistics.stdev(male_ph) * 1000) / 1000
+
+# prints the value of the mean pH and standard deviations of the male and female data sets
+print("Statistical Information of Data Set:")
+print(f'f_bar = {f_bar} | m_bar = {m_bar}') 
+print(f'f_std = {f_std} | m_std = {m_std}')
+
+# creating lists for making the bar graph
+average_ph_cols = ['Female', 'Male']
+mean_ph = [f_bar, m_bar]
+std_groups = [f_std, m_std]
+yerr = std_groups
+
+# running the t-test of the data
+t_stat, p_val = stats.ttest_ind(female_ph, male_ph)
+t_stat = math.trunc(t_stat * 100) / 100
+p_val = math.trunc(p_val * 100) / 100
+print(f't_stat = {t_stat}, p_val = {p_val}')
+print(f'')
+
+# creates the limit of the y-axis based on the maximum pH value
+ylim = max(mean_ph) + 1.5
+
+# creating the bar graph
+plt.bar(average_ph_cols, mean_ph, yerr=yerr, capsize=10, color=["purple", "green"])
+plt.title("Average Brain pH of Dementia Patients")
+plt.xlabel("Sex")
+plt.ylabel("Average Brain pH")
+plt.ylim(0, ylim)
+plt.text(
+        0.5, ylim - 1,
+        f"t = {t_stat},\n p = {p_val}",
+        ha = 'center',
+        va = 'bottom'
+        )
+
+# saves the bar graph as a .png
+plt.savefig("brain_ph_bar_graph.png")
+
+# outputs the resulting bar graph
+plt.show()
+
+female_dementia = Patient.filter(Patient.all_patients, sex = "F", cog_stat = "Dementia")
+male_dementia = Patient.filter(Patient.all_patients, sex = "M", cog_stat = "Dementia")
+
+# creating lists for the ptau values in all males and females with dementia
+ptau_female = []
+ptau_male = []
+
+# adds the ptau levels of females and males with dementia into two separate lists
+for patient in female_dementia:
+    ptau_female.append(patient.ptau)
+
+for patient in male_dementia:
+    ptau_male.append(patient.ptau)
+
+# calculate the mean pTAU level for each group
+female_mean = statistics.mean(ptau_female)
+male_mean = statistics.mean(ptau_male)
+
+# calculate the standard deviation for each group
+female_stdev = statistics.stdev(ptau_female)
+male_stdev = statistics.stdev(ptau_male)
+
+# prints the statistical information
+print(f"Female mean pTAU: {female_mean}")
+print(f"Female standard deviation: {female_stdev}")
+
+print(f"Male mean pTAU: {male_mean}")
+print(f"Male standard deviation: {male_stdev}")
+
+# creating lists to make bar graph
+groups = ["Female", "Male"]
+means = [female_mean, male_mean]
+stdevs = [female_stdev, male_stdev]
+
+# calculating the t-value and p-value of the data
+t_stat, p_val = stats.ttest_ind(ptau_female, ptau_male)
+print(f't-stat = {t_stat}, p_val = {p_val}')
+
+# creating bar graph
+plt.bar(groups, means, yerr=stdevs, capsize=10)
+plt.xlabel("Sex")
+plt.ylabel("Mean pTAU (pg/ug)")
+plt.title("Mean pTAU Levels in Patients with Dementia")
+
+# saves the resulting bar graph as a .png file
+plt.savefig("ptau_bar_graph.png")
+
+# outputs the resulting bar graph
+plt.show()
+
+# creates empty lists for age at death and pTAU levels
+ages = []
+ptau_values = []
+
+# adds each patient's age at death and pTAU value to the lists
+for patient in Patient.all_patients:
+    ages.append(patient.get_age())
+    ptau_values.append(patient.get_ptau())
+
+# creates the scatter plot
+plt.scatter(np.array(ages).reshape(-1, 1), ptau_values)
+plt.xlabel("Age at Death")
+plt.ylabel("pTAU (pg/ug)")
+plt.title("pTAU Levels vs. Age at Death")
+
+# saves the resulting bar graph as a .png file
+plt.savefig("ptau_scatter_plot.png") #save the graph as a png file
+
+# outputs the resulting bar graph
+plt.show()
+
+# creating lists for data points for the scatterplot
+dementia_ab = []
+dementia_tau = []
+no_dementia_ab = []
+no_dementia_tau = []
+
+# creates two lists that holds patients with either dementia or no dementia
+dementia_patients = Patient.filter_attr(Patient.all_patients, dementia = "Dementia")
+no_dementia_patients = Patient.filter_attr(Patient.all_patients, dementia = "No dementia")
+
+# the next two sections take the values for ab40/42 and t/ptau and calculates the ration between 
+# the same type of protein and adding them into lists to use as x and y values in the scatterplot
+for patient in dementia_patients:
+    dementia_ab.append(patient.get_ab_ratio())
+    dementia_tau.append(patient.get_tau_ratio())
+
+for patient in no_dementia_patients:
+    no_dementia_ab.append(patient.get_ab_ratio())
+    no_dementia_tau.append(patient.get_tau_ratio())
+
+# creating x and y values for both patients with and without dementia
+a = dementia_ab
+b = dementia_tau
+x = no_dementia_ab
+y = no_dementia_tau
+
+#creates a linear regression object
+model = LinearRegression()
+
+#reshapes the arrays to allow for linear regression to be computed
+a_reg = np.array(a).reshape(-1, 1)
+x_reg = np.array(x).reshape(-1, 1)
+
+# determines the upper limits for the x- and y-axis based on the max value of the combined data set of protein ratios
+if max(a) > max(x):
+    xlim = max(x) + .05
+else:
+    xlim = max(a) + .05
+
+if max(b) > max(y):
+    ylim = max(b) + .05
+else:
+    ylim = max(y) + .05
+
+# creation of the scatterplot
+# red spots being patients with dementia and blue spots for patients without dementia
+plt.scatter(a, b, s = 5, color='red')
+plt.scatter(x, y, s = 5, color='blue')
+plt.xlabel('Fraction of ABeta42 to Total ABeta')
+plt.ylabel('Fraction of pTAU to tTAU')
+plt.title('Scatter Plot Fraction of ABeta versus TAU')
+plt.xlim(0, xlim)
+plt.ylim(0, ylim)
+
+# linear regression of the data points of patients with dementia
+model.fit(a_reg, b)
+slope = model.coef_[0]
+intercept = model.intercept_
+r2 = model.score(a_reg, b)
+equation = f"y = {slope:.2f}x + {intercept:.2f}\nR^2 = {r2:.2f}"
+plt.text(xlim * .1, ylim * 0.95, equation, color = "red", fontsize = 12, verticalalignment = "top")
+plt.plot(a_reg, model.predict(a_reg), color = "red")
+
+# linear regression of the data points of patients without dementia
+model.fit(x_reg, y)
+slope = model.coef_[0]
+intercept = model.intercept_
+r2 = model.score(x_reg, y)
+equation = f"y = {slope:.2f}x + {intercept:.2f}\nR^2 = {r2:.2f}"
+plt.text(xlim * .6, ylim * 0.95, equation, color = "blue", fontsize = 12, verticalalignment = "top")
+plt.plot(x_reg, model.predict(x_reg), color = "blue")
+
+# outputs the resulting scatterplot
+plt.show()
+
+# saves the scatterplot as a .png
+plt.savefig("abeta_versus_tau_ratios_scatterplot.png")
+
+# ABeta42 Analysis from Class
+# creates lists of four groups, based on sex and cognitive state
+ABeta42_health_fem_vals = []
+ABeta42_health_male_vals = []
+ABeta42_diseased_fem_vals = []
+ABeta42_diseased_male_vals = []
+
+# filters through all_patients and adds a patient's ABeta42 level based on sex and cognitive
+for patient in Patient.filter(Patient.all_patients, sex = "F", cog_stat = "No dementia"):
+    ABeta42_health_fem_vals.append(patient.get_ab42())
+
+for patient in Patient.filter(Patient.all_patients, sex = "M", cog_stat = "No dementia"):
+    ABeta42_health_male_vals.append(patient.get_ab42())
+
+for patient in Patient.filter(Patient.all_patients, sex = "F", cog_stat = "Dementia"):
+    ABeta42_diseased_fem_vals.append(patient.get_ab42())
+
+for patient in Patient.filter(Patient.all_patients, sex = "M", cog_stat = "Dementia"):
+    ABeta42_diseased_male_vals.append(patient.get_ab42())
+
+# creates the bars for the bar graph based on the mean ABeta42 level in each group
+x_health_fem_bar = (statistics.mean(ABeta42_health_fem_vals))
+x_health_male_bar = (statistics.mean(ABeta42_health_male_vals))
+x_diseased_fem_bar = (statistics.mean(ABeta42_diseased_fem_vals))
+x_diseased_male_bar = (statistics.mean(ABeta42_diseased_male_vals))
+
+#c alculates the stdev within each group
+ABeta_health_fem_stdev = (statistics.stdev(ABeta42_health_fem_vals))
+ABeta_health_male_stdev = (statistics.stdev(ABeta42_health_male_vals))
+ABeta_diseased_fem_stdev = (statistics.stdev(ABeta42_diseased_fem_vals))
+ABeta_diseased_male_stdev = (statistics.stdev(ABeta42_diseased_male_vals))
+
+# prints the means and stdevs of each group
+print(f'x_bar = {x_health_fem_bar}, ABeta_stdev {ABeta_health_fem_stdev}')
+print(f'x_bar = {x_health_male_bar}, ABeta_stdev {ABeta_health_male_stdev}')
+print(f'x_bar = {x_diseased_fem_bar}, ABeta_stdev {ABeta_diseased_fem_stdev}')
+print(f'x_bar = {x_diseased_male_bar}, ABeta_stdev {ABeta_diseased_male_stdev}')
+
+# creates lists needed to label and create the bar graph
+sex_cols = ['Healthy Female', 'Healthy Male', 'Diseased Female', 'Diseased Male']
+
+# CHANGED ONE THING HERE
+# Your original fourth value was x_health_male_bar.
+# It should be x_diseased_male_bar.
+
+mean_sex_ABeta42 = [
+    x_health_fem_bar,
+    x_health_male_bar,
+    x_diseased_fem_bar,
+    x_diseased_male_bar
+]
+
+stdev_sex_ABeta42 = [
+    ABeta_health_fem_stdev,
+    ABeta_health_male_stdev,
+    ABeta_diseased_fem_stdev,
+    ABeta_diseased_male_stdev
+]
+
+colors = ["red", "blue", "pink", "skyblue"]
+yerr = [np.zeros(len(mean_sex_ABeta42)), stdev_sex_ABeta42]
+
+# Runs a one-way ANOVA
+f_stat, p_value = stats.f_oneway(
+    ABeta42_health_fem_vals,
+    ABeta42_health_male_vals,
+    ABeta42_diseased_fem_vals,
+    ABeta42_diseased_male_vals
+)
+
+# prints the f-stat and p value
+print("F-statistic:", f_stat)
+print("p-value:", p_value)
+
+# creates bar graph
+plt.text(
+    1.5,
+    380,
+    f"One-Way-ANOVA: p = {p_value:.3f}",
+    ha='right',
+    va='top',
+    fontsize=12
+)
+
+plt.bar(
+    sex_cols,
+    mean_sex_ABeta42,
+    yerr=yerr,
+    capsize=10,
+    color=["red", "blue", "pink", "skyblue"]
+)
+
+plt.title("ABeta42 Levels")
+plt.xlabel("Sex and Health Status")
+plt.ylabel("Abeta42")
+
+# outputs the resulting bar graph
+plt.show()
+
+# saves the bar graph as a .png file
+plt.savefig("sex_and_cog_status_bar_graph")
+
+# creates empty lists for pTAU and MMSE
+ptau_mmse = []
+mmse_scores = []
+
+# add pTAU and MMSE values for patients who have an MMSE score
+for patient in Patient.all_patients:
+    if patient.mmse is not None:
+        ptau_mmse.append(patient.ptau)
+        mmse_scores.append(patient.mmse)
+
+# prints the pTAU values and MMSE scores
+print("pTAU values for MMSE analysis:")
+print(ptau_mmse)
+
+print("MMSE scores:")
+print(mmse_scores)
+
+# ----------------------------------------------------
+# pTAU VS MMSE SCATTER PLOT
+# ----------------------------------------------------
+
+# Independent variable = pTAU
+X = np.array(ptau_mmse).reshape(-1, 1)
+
+# Dependent variable = MMSE score
+y = np.array(mmse_scores)
+
+# Do the linear regression
+model.fit(X, y)
+
+# Find slope, intercept, and R^2
+slope = model.coef_[0]
+intercept = model.intercept_
+r2 = model.score(X, y)
+
+# prints the slope, intercept, and R^2 values
+print(f"Slope = {slope}")
+print(f"Intercept = {intercept}")
+print(f"R-squared = {r2}")
+
+# combines the above characteristics of the line of best fit
+equation = f"y = {slope:.2f}x + {intercept:.2f}\nR² = {r2:.2f}"
+
+# creates a scatterplot of ptau levels vs mmse scores
+plt.scatter(X, y)
+plt.plot(X, model.predict(X))
+plt.xlabel("pTAU Concentration (pg/ug)")
+plt.ylabel("MMSE Score")
+plt.title("pTAU Concentration vs. MMSE Score")
+
+# Put equation and R^2 on graph
+plt.text(
+    X.max(),
+    y.max(),
+    equation,
+    fontsize=12,
+    verticalalignment='top',
+    horizontalalignment='right'
+)
+
+# saves the scatterplot as a .png file
+plt.savefig("ptau_vs_mmse_regression.png")
+
+# outputs the resulting scatterplot
+plt.show()

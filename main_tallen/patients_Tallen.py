@@ -1,9 +1,11 @@
 import csv
 class Patient:
-# a list containing all patients as they are made
+
+    # a list containing all patients as they are made
     all_patients = []
-# creates a patient object with the following attributes and then adds the new object to the list of all patients
-    def __init__(self, age: int = "any", sex: str = "any", edu_years: int = "any", apoe: str = "any", dementia: str = "any", brain_ph: float = "any", ab40: float = "any", ab42: float = "any", ttau: float = "any", ptau: float = "any"):
+
+    # creates a patient object with the following attributes and then adds the new object to the list of all patients
+    def __init__(self, age, sex, edu_years, apoe, dementia, brain_ph, ab40, ab42, ttau, ptau):
         self.age = age
         self.sex = sex
         self.edu_years = edu_years
@@ -15,31 +17,40 @@ class Patient:
         self.ttau = ttau
         self.ptau = ptau
         Patient.all_patients.append(self)
-# how a patient is printed
+
+    # how a patient is printed
     def __repr__(self):
         return f"({self.age} | {self.sex} | {self.apoe} | {self.dementia})"
-# retrieves the age of death
+
+    # retrieves the age of death
     def get_age(self):
         return self.age
-# retrieves the cognitive status
+
+    # retrieves the cognitive status
     def get_dementia(self):
         return self.dementia
-# retrieves brain pH
+
+    # retrieves brain pH
     def get_brain_ph(self):
         return self.brain_ph
-# retrieves the ratio of ABeta42 to the total amount of ABeta protein
+
+    # retrieves the ratio of ABeta42 to the total amount of ABeta protein
     def get_ab_ratio(self):
         return self.ab42 / (self.ab40 + self.ab42)
-# retrieves the ratio of pTAU to the total amount of the TAU protein
+
+    # retrieves the ratio of pTAU to the total amount of the TAU protein
     def get_tau_ratio(self):
         return self.ptau / self.ttau
-# retrieves the amount of ABeta42
+
+    # retrieves the amount of ABeta42
     def get_ab42(self):
         return self.ab42
-# retrieves the amount of pTAU
+
+    # retrieves the amount of pTAU
     def get_ptau(self):
         return self.ptau
-# creates patient objects from a csv file (the patient information)
+    
+    # creates patient objects from a csv file (the patient information)
     @classmethod 
     def instantiate_from_csv(cls, filename: str):
 
@@ -73,7 +84,7 @@ class Patient:
                 ttau = float(row['tTAU pg/ug']),
                 ptau = float(row['pTAU pg/ug'])
                 )
-# returns a list of patients that share the input attributes' value
+    # returns a list of patients that share the input attributes' value
     @classmethod
     def filter(cls, list, age:int ="any", sex:str ="any", edu_years:int ="any", apoe:str ="any", dementia:str ="any", brain_ph:float = "any", ab40:float = "any", ab42:float = "any", ttau:float = "any", ptau:float = "any"):
         all_patients = list
@@ -102,25 +113,26 @@ class Patient:
                     "ttau",
                     "ptau"
                     )
-# goes through the attributes of each patient and adds them to the remove_list if the attribute is not shared
+        # goes through the attributes of each patient and adds them to the remove_list if the attribute is not shared
         for attr in range(len(attr_list)):
             if attr_list[attr] != "any":
                 for patient in all_patients:
                     if getattr(patient,attr_name[attr]) != attr_list[attr]:
                         remove_list.append(patient)
-# adds patients from all_patients to some_patients if the patient is NOT on the remove_list
+                # adds patients from all_patients to some_patients if the patient is NOT on the remove_list
                 some_patients = [patient for patient in all_patients if patient not in remove_list]
                 remove_list.clear()
         return some_patients
-# returns a list of patients that share the two input attribute values; sex and cognitive status
+
+    # returns a list of patients that share the two input attribute values; sex and cognitive status
     @classmethod
     def filter_cs_sex(cls, list, sex:str = "any", dementia:str = "any"):
         new_list = []
-# references the filter method above
+        # references the filter method above
         new_list = cls.filter(list, sex = sex)
-# the new_list is input into the filter rather than the initial list
+        # the new_list is input into the filter rather than the initial list
         new_list = cls.filter(new_list, dementia = dementia)
-# prints the patients in the new, filtered list and adds a border to the bottom of the list
+        # prints the patients in the new, filtered list and adds a border to the bottom of the list
         for patient in new_list:
             print(patient)
         print("/////////////////////////////////////")

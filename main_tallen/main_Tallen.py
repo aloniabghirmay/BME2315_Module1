@@ -64,7 +64,7 @@ print(f'f_std = {f_std} | m_std = {m_std}')
 average_ph_cols = ['Female', 'Male']
 mean_ph = [f_bar, m_bar]
 std_groups = [f_std, m_std]
-yerr = [np.zeros(len(mean_ph)), std_groups]
+yerr = std_groups
 
 # running the t-test of the data
 t_stat, p_val = stats.ttest_ind(female_ph, male_ph)
@@ -77,11 +77,11 @@ print(f'')
 ylim = max(mean_ph) + 1.5
 
 # creating the bar graph
-plt.ylim(0, ylim)
 plt.bar(average_ph_cols, mean_ph, yerr=yerr, capsize=10, color=["purple", "green"])
 plt.title("Average Brain pH of Dementia Patients")
 plt.xlabel("Sex")
 plt.ylabel("Average Brain pH")
+plt.ylim(0, ylim)
 plt.text(
         0.5, ylim - 1,
         f"t = {t_stat},\n p = {p_val}",
@@ -91,6 +91,9 @@ plt.text(
 
 # outputs the resulting bar graph
 plt.show()
+
+# saves the bar graph as a .png
+plt.savefig("brain_ph_bar_graph.png")
 
 # creating lists for data points for the scatterplot
 dementia_ab = []
@@ -166,3 +169,6 @@ plt.plot(x_reg, model.predict(x_reg), color = "blue")
 
 # outputs the resulting scatterplot
 plt.show()
+
+# saves the scatterplot as a .png
+plt.savefig("abeta_versus_tau_ratios_scatterplot.png")
