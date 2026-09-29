@@ -8,8 +8,11 @@ import statistics
 import math as math
 from sklearn.linear_model import LinearRegression
 
+#creates a linear regression object
+model = LinearRegression()
+
 #creates patient objects for all rows of data in the csv file
-Patient.instantiate_from_csv("patientdata.csv")
+Patient.instantiate_from_csv("main/patientdata.csv")
 
 # sorts the data by age and then by whether they have dementia or not, thus two groups in numerical order
 # and then prints all patients in all_patients
@@ -18,59 +21,59 @@ Patient.all_patients.sort(key = Patient.get_dementia, reverse = True)
 for patient in Patient.all_patients: 
     print(patient)
 
-# lists to hold all female brain pH values and male brain pH values
-female_ph = []
-male_ph = []
+# lists to hold all dementia patient brain pH values and no dementia brain pH values
+dementia_ph = []
+no_dementia_ph = []
 
-# variables to hold the sums of all pH values for females and males
-ft_ph = 0.0
-mt_ph = 0.0
+# variables to hold the sums of all pH values for dementia and no dementia patients
+dt_ph = 0.0
+ndt_ph = 0.0
 
-# variables to hold the mean of the pH values for females and males to then use as the bars on the graph
-f_bar = 0.0
-m_bar = 0.0
+# variables to hold the mean of the pH values for dementia and no dementia patients to then use as the bars on the graph
+d_bar = 0.0
+nd_bar = 0.0
 
-# variables to hold the standard deviations of the female and male brain pH data sets
-f_std = 0.0
-m_std = 0.0
+# variables to hold the standard deviations of the dementia and no dementia brain pH data sets
+d_std = 0.0
+nd_std = 0.0
 
-# the next two sections filter the data to separate the female/male patients with dementia and then extract their brain pH into two separate lists
-Patient.some_patients = Patient.filter_patients(sex = "F", cognitive_status = "Dementia")
+# the next two sections filter the data to separate the patients with dementia and then extract their brain pH into two separate lists
+Patient.some_patients = Patient.filter_attr(Patient.all_patients, dementia = "Dementia")
 for patient in Patient.some_patients:
-    female_ph.append(patient.get_brain_ph())
+    dementia_ph.append(patient.get_brain_ph())
 
-Patient.some_patients = Patient.filter_patients(sex = "M", cognitive_status = "Dementia")
+Patient.some_patients = Patient.filter_attr(Patient.all_patients, dementia = "No dementia")
 for patient in Patient.some_patients:
-    male_ph.append(patient.get_brain_ph())
+    no_dementia_ph.append(patient.get_brain_ph())
 
-# summing of all pH values of each sex to use to find the mean
-for each in female_ph:
-    ft_ph += each
+# summing of all pH values of each group to use to find the mean
+for each in dementia_ph:
+    dt_ph += each
 
-for each in male_ph:
-    mt_ph += each
+for each in no_dementia_ph:
+    ndt_ph += each
 
 # calculating the mean pH to use as the bar in the bar graph
-f_bar = math.trunc(ft_ph * 1000 / (len(female_ph))) / 1000
-m_bar = math.trunc(mt_ph * 1000 / (len(male_ph))) / 1000
+d_bar = math.trunc(dt_ph * 1000 / (len(dementia_ph))) / 1000
+nd_bar = math.trunc(ndt_ph * 1000 / (len(no_dementia_ph))) / 1000
 
 # calculating the standard deviation of the two brain pH data sets
-f_std = math.trunc(statistics.stdev(female_ph) * 1000) / 1000
-m_std = math.trunc(statistics.stdev(male_ph) * 1000) / 1000
+d_std = math.trunc(statistics.stdev(dementia_ph) * 1000) / 1000
+nd_std = math.trunc(statistics.stdev(no_dementia_ph) * 1000) / 1000
 
-# prints the value of the mean pH and standard deviations of the male and female data sets
+# prints the value of the mean pH and standard deviations of the dementia and no dementia patient data sets
 print("Statistical Information of Data Set:")
-print(f'f_bar = {f_bar} | m_bar = {m_bar}') 
-print(f'f_std = {f_std} | m_std = {m_std}')
+print(f'd_bar = {d_bar} | nd_bar = {nd_bar}') 
+print(f'd_std = {d_std} | nd_std = {nd_std}')
 
 # creating lists for making the bar graph
-average_ph_cols = ['Female', 'Male']
-mean_ph = [f_bar, m_bar]
-std_groups = [f_std, m_std]
+average_ph_cols = ['Dementia', 'No Dementia']
+mean_ph = [d_bar, nd_bar]
+std_groups = [d_std, nd_std]
 yerr = std_groups
 
 # running the t-test of the data
-t_stat, p_val = stats.ttest_ind(female_ph, male_ph)
+t_stat, p_val = stats.ttest_ind(dementia_ph, no_dementia_ph)
 t_stat = math.trunc(t_stat * 100) / 100
 p_val = math.trunc(p_val * 100) / 100
 print(f't_stat = {t_stat}, p_val = {p_val}')
@@ -80,9 +83,9 @@ print(f'')
 ylim = max(mean_ph) + 1.5
 
 # creating the bar graph
-plt.bar(average_ph_cols, mean_ph, yerr=yerr, capsize=10, color=["purple", "green"])
-plt.title("Average Brain pH of Dementia Patients")
-plt.xlabel("Sex")
+plt.bar(average_ph_cols, mean_ph, yerr=yerr, capsize=10, color=["orange", "blue"])
+plt.title("Average Brain pH of Dementia Patients and Patients without Dementia")
+plt.xlabel("Cognitive Status")
 plt.ylabel("Average Brain pH")
 plt.ylim(0, ylim)
 plt.text(
@@ -195,10 +198,7 @@ b = dementia_tau
 x = no_dementia_ab
 y = no_dementia_tau
 
-#creates a linear regression object
-model = LinearRegression()
-
-#reshapes the arrays to allow for linear regression to be computed
+# reshapes the arrays to allow for linear regression to be computed
 a_reg = np.array(a).reshape(-1, 1)
 x_reg = np.array(x).reshape(-1, 1)
 
@@ -287,10 +287,6 @@ print(f'x_bar = {x_diseased_male_bar}, ABeta_stdev {ABeta_diseased_male_stdev}')
 
 # creates lists needed to label and create the bar graph
 sex_cols = ['Healthy Female', 'Healthy Male', 'Diseased Female', 'Diseased Male']
-
-# CHANGED ONE THING HERE
-# Your original fourth value was x_health_male_bar.
-# It should be x_diseased_male_bar.
 
 mean_sex_ABeta42 = [
     x_health_fem_bar,
