@@ -1,11 +1,13 @@
 import csv
+import math as math
 class Patient:
 
     # a list containing all patients as they are made
     all_patients = []
 
     # creates a patient object with the following attributes and then adds the new object to the list of all patients
-    def __init__(self, age, sex, edu_years, apoe, dementia, brain_ph, ab40, ab42, ttau, ptau):
+    def __init__(self, name, age, sex, edu_years, apoe, dementia, brain_ph, ab40, ab42, ttau, ptau, mmse):
+        self.name = name
         self.age = age
         self.sex = sex
         self.edu_years = edu_years
@@ -16,11 +18,12 @@ class Patient:
         self.ab42 = ab42
         self.ttau = ttau
         self.ptau = ptau
+        self.mmse = mmse
         Patient.all_patients.append(self)
 
     # how a patient is printed
     def __repr__(self):
-        return f"({self.age} | {self.sex} | {self.apoe} | {self.dementia})"
+        return f"({self.age} | {self.sex} | Education (Years): {self.edu_years} | {self.dementia} | Brain pH: {self.brain_ph})"
 
     # retrieves the age of death
     def get_age(self):
@@ -41,6 +44,10 @@ class Patient:
     # retrieves the ratio of pTAU to the total amount of the TAU protein
     def get_tau_ratio(self):
         return self.ptau / self.ttau
+
+    #retrieves the pTAU value
+    def get_ptau(self):
+        return float(self.ptau)
 
     # retrieves the amount of ABeta42
     def get_ab42(self):
@@ -71,14 +78,21 @@ class Patient:
                     patient_sex = "M"
                 else:
                     patient_sex = "F"
-            
+
+                if row["Last MMSE Score"] == "":
+                    mmse = None
+                else:
+                    mmse = float(row["Last MMSE Score"])
+
                 Patient(
+                name = row["Donor ID"],
                 age = int(row['Age at Death']),
                 sex = patient_sex,
                 edu_years = int(row['Years of education']),
                 apoe = row['APOE Genotype'],
                 dementia = row['Cognitive Status'],
                 brain_ph = float(row['Brain pH']),
+                mmse = mmse,
                 ab40 = float(row['ABeta40 pg/ug']),
                 ab42 = float(row['ABeta42 pg/ug']),
                 ttau = float(row['tTAU pg/ug']),
@@ -86,7 +100,7 @@ class Patient:
                 )
     # returns a list of patients that share the input attributes' value
     @classmethod
-    def filter(cls, list, age:int ="any", sex:str ="any", edu_years:int ="any", apoe:str ="any", dementia:str ="any", brain_ph:float = "any", ab40:float = "any", ab42:float = "any", ttau:float = "any", ptau:float = "any"):
+    def filter_attr(cls, list, age:int ="any", sex:str ="any", edu_years:int ="any", apoe:str ="any", dementia:str ="any", brain_ph:float = "any", ab40:float = "any", ab42:float = "any", ttau:float = "any", ptau:float = "any"):
         all_patients = list
         remove_list = []
         attr_list = (
@@ -126,7 +140,7 @@ class Patient:
 
     # returns a list of patients that share the two input attribute values; sex and cognitive status
     @classmethod
-    def filter_cs_sex(cls, list, sex:str = "any", dementia:str = "any"):
+    def filter_print(cls, list, sex:str = "any", dementia:str = "any"):
         new_list = []
         # references the filter method above
         new_list = cls.filter(list, sex = sex)
@@ -137,3 +151,31 @@ class Patient:
             print(patient)
         print("/////////////////////////////////////")
         return new_list
+###################################################### Look at this
+    @classmethod
+    def filter_patients(cls, sex, cognitive_status): #filters the patient objects by sex and cognitive status
+
+        filtered_patients = []
+
+        for patient in Patient.all_patients:
+
+             if patient.sex == sex and patient.dementia == cognitive_status:
+
+                filtered_patients.append(patient)
+
+        return filtered_patients
+
+
+    # NEW
+    # This allows the Patient.filter(...) code from the lecture
+    # and from your original ABeta42 section to work
+    @classmethod
+    def filter(cls, patients, sex, cog_stat):
+
+        filtered_patients = []
+
+        for patient in patients:
+            if patient.sex == sex and patient.dementia == cog_stat:
+                filtered_patients.append(patient)
+        
+        return filtered_patients
