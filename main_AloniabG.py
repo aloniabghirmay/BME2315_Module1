@@ -137,13 +137,7 @@ t_stat, p_val = stats.ttest_ind(ptau_female, ptau_male)
 
 print(f't-stat = {t_stat}, p_val = {p_val}')
 
-
-
-
-# ----------------------------------------------------
 # ABeta42 ANALYSIS FROM CLASS
-# ----------------------------------------------------
-
 
 ABeta42_health_fem_vals = []
 
@@ -207,11 +201,6 @@ print(f'x_bar = {x_diseased_male_bar}, ABeta_stdev {ABeta_diseased_male_stdev}')
 
 sex_cols = ['Healthy Female', 'Healthy Male', 'Diseased Female', 'Diseased Male']
 
-
-# CHANGED ONE THING HERE
-# Your original fourth value was x_health_male_bar.
-# It should be x_diseased_male_bar.
-
 mean_sex_ABeta42 = [
     x_health_fem_bar,
     x_health_male_bar,
@@ -234,7 +223,7 @@ colors = ["red", "blue", "pink", "skyblue"]
 yerr = [np.zeros(len(mean_sex_ABeta42)), stdev_sex_ABeta42]
 
 
-# Run one-way ANOVA
+#ANOVA to test for differences in means between the four groups
 
 f_stat, p_value = stats.f_oneway(
     ABeta42_health_fem_vals,
@@ -277,24 +266,16 @@ plt.ylabel("Abeta42")
 
 plt.show()
 
+#pTAUCONCENTRATION VS. MMSESCORE
 
-
-
-# ====================================================
-# NEW SECTION
-# PROJECT QUESTION:
-# pTAU CONCENTRATION VS. MMSE SCORE
-# ====================================================
-
-
-# Create empty lists for pTAU and MMSE
+#empty lists to hold pTAU and MMSE values for patients who have an MMSE score
 
 ptau_mmse = []
 
 mmse_scores = []
 
 
-# Add pTAU and MMSE values for patients who have an MMSE score
+#Add pTAU and MMSE values for patients who have an MMSE score
 
 for patient in Patient.all_patients:
 
@@ -317,9 +298,7 @@ print(mmse_scores)
 
 
 
-# ----------------------------------------------------
-# pTAU VS MMSE SCATTER PLOT
-# ----------------------------------------------------
+#Create scatter plot of pTAU vs MMSE
 
 
 plt.scatter(ptau_mmse, mmse_scores)
@@ -338,25 +317,15 @@ plt.savefig("ptau_vs_mmse_scatter.png")
 plt.show()
 
 
-
-
-# ----------------------------------------------------
-# LINEAR REGRESSION
-# ----------------------------------------------------
-
-
-# Independent variable = pTAU
+#ptau is being set as independent variable and mmse is being set as dependent variable for linear regression
 
 X = np.array(ptau_mmse).reshape(-1, 1)
-
-
-# Dependent variable = MMSE score
 
 y = np.array(mmse_scores)
 
 
 
-# Do the linear regression
+#linearregression
 
 model = LinearRegression()
 
@@ -364,7 +333,7 @@ model.fit(X, y)
 
 
 
-# Find slope, intercept, and R-squared
+#slope, intercept, and r-squared value of the regression line
 
 slope = model.coef_[0]
 
@@ -382,13 +351,13 @@ print(f"R-squared = {r2}")
 
 
 
-# Equation to put on the graph
+#equation to be displayed on the graph, from ChatGPT
 
 equation = f"y = {slope:.2f}x + {intercept:.2f}\nR² = {r2:.2f}"
 
 
 
-# Make scatter plot
+#the scatter plot of pTAU vs MMSE with the regression line and equation displayed on the graph
 
 plt.scatter(X, y)
 
@@ -399,7 +368,7 @@ plt.plot(X, model.predict(X))
 
 
 
-# Put equation and R-squared on graph
+#Put equation and R-squared on graph
 
 plt.text(
     X.max(),
