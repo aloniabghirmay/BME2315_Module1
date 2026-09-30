@@ -139,11 +139,22 @@ stdevs = [female_stdev, male_stdev]
 t_stat, p_val = stats.ttest_ind(ptau_female, ptau_male)
 print(f't-stat = {t_stat}, p_val = {p_val}')
 
+# truncating t-value and p-values up to 2 decimal places
+t_stat = math.trunc(t_stat * 100) / 100
+p_val = math.trunc(p_val * 100) / 100
+
 # creating bar graph
+plt.ylim(0, 10)
 plt.bar(groups, means, yerr=stdevs, capsize=10)
 plt.xlabel("Sex")
 plt.ylabel("Mean pTAU (pg/ug)")
 plt.title("Mean pTAU Levels in Patients with Dementia")
+plt.text(
+        0.5, 8.5,
+        f"t = {t_stat},\n p = {p_val}",
+        ha = 'center',
+        va = 'bottom'
+        )
 
 # saves the resulting bar graph as a .png file
 plt.savefig("ptau_bar_graph.png")
@@ -160,14 +171,25 @@ for patient in Patient.all_patients:
     ages.append(patient.get_age())
     ptau_values.append(patient.get_ptau())
 
-# creates the scatter plot
+model.fit(np.array(ages).reshape(-1, 1), ptau_values)
+slope = model.coef_[0]
+intercept = model.intercept_
+r2 = model.score(np.array(ages).reshape(-1, 1), ptau_values)
+equation = f"y = {slope:.2f}x + {intercept:.2f}\nR^2 = {r2:.2f}"
+
+# creates the scatterplot
+plt.ylim(min(ptau_values),max(ptau_values) + 3)
 plt.scatter(np.array(ages).reshape(-1, 1), ptau_values)
 plt.xlabel("Age at Death")
 plt.ylabel("pTAU (pg/ug)")
 plt.title("pTAU Levels vs. Age at Death")
 
+# linear regression related
+plt.text(statistics.mean(ages), max(ptau_values) + 2, equation, color = "blue", fontsize = 12, verticalalignment = "top")
+plt.plot(np.array(ages).reshape(-1, 1), model.predict(np.array(ages).reshape(-1, 1)), color = "blue")
+
 # saves the resulting bar graph as a .png file
-plt.savefig("ptau_scatter_plot.png") #save the graph as a png file
+plt.savefig("ptau_versus_ageofdeath_scatter_plot.png") #save the graph as a png file
 
 # outputs the resulting bar graph
 plt.show()
@@ -219,7 +241,7 @@ plt.scatter(a, b, s = 5, color='red')
 plt.scatter(x, y, s = 5, color='blue')
 plt.xlabel('Fraction of ABeta42 to Total ABeta')
 plt.ylabel('Fraction of pTAU to tTAU')
-plt.title('Scatter Plot Fraction of ABeta versus TAU')
+plt.title('Scatterplot Fraction of ABeta versus TAU')
 plt.xlim(0, xlim)
 plt.ylim(0, ylim)
 
@@ -241,109 +263,11 @@ equation = f"y = {slope:.2f}x + {intercept:.2f}\nR^2 = {r2:.2f}"
 plt.text(xlim * .6, ylim * 0.95, equation, color = "blue", fontsize = 12, verticalalignment = "top")
 plt.plot(x_reg, model.predict(x_reg), color = "blue")
 
-# outputs the resulting scatterplot
-plt.show()
-
 # saves the scatterplot as a .png
 plt.savefig("abeta_versus_tau_ratios_scatterplot.png")
 
-# ABeta42 Analysis from Class
-# creates lists of four groups, based on sex and cognitive state
-ABeta42_health_fem_vals = []
-ABeta42_health_male_vals = []
-ABeta42_diseased_fem_vals = []
-ABeta42_diseased_male_vals = []
-
-# filters through all_patients and adds a patient's ABeta42 level based on sex and cognitive
-for patient in Patient.filter(Patient.all_patients, sex = "F", cog_stat = "No dementia"):
-    ABeta42_health_fem_vals.append(patient.get_ab42())
-
-for patient in Patient.filter(Patient.all_patients, sex = "M", cog_stat = "No dementia"):
-    ABeta42_health_male_vals.append(patient.get_ab42())
-
-for patient in Patient.filter(Patient.all_patients, sex = "F", cog_stat = "Dementia"):
-    ABeta42_diseased_fem_vals.append(patient.get_ab42())
-
-for patient in Patient.filter(Patient.all_patients, sex = "M", cog_stat = "Dementia"):
-    ABeta42_diseased_male_vals.append(patient.get_ab42())
-
-# creates the bars for the bar graph based on the mean ABeta42 level in each group
-x_health_fem_bar = (statistics.mean(ABeta42_health_fem_vals))
-x_health_male_bar = (statistics.mean(ABeta42_health_male_vals))
-x_diseased_fem_bar = (statistics.mean(ABeta42_diseased_fem_vals))
-x_diseased_male_bar = (statistics.mean(ABeta42_diseased_male_vals))
-
-#c alculates the stdev within each group
-ABeta_health_fem_stdev = (statistics.stdev(ABeta42_health_fem_vals))
-ABeta_health_male_stdev = (statistics.stdev(ABeta42_health_male_vals))
-ABeta_diseased_fem_stdev = (statistics.stdev(ABeta42_diseased_fem_vals))
-ABeta_diseased_male_stdev = (statistics.stdev(ABeta42_diseased_male_vals))
-
-# prints the means and stdevs of each group
-print(f'x_bar = {x_health_fem_bar}, ABeta_stdev {ABeta_health_fem_stdev}')
-print(f'x_bar = {x_health_male_bar}, ABeta_stdev {ABeta_health_male_stdev}')
-print(f'x_bar = {x_diseased_fem_bar}, ABeta_stdev {ABeta_diseased_fem_stdev}')
-print(f'x_bar = {x_diseased_male_bar}, ABeta_stdev {ABeta_diseased_male_stdev}')
-
-# creates lists needed to label and create the bar graph
-sex_cols = ['Healthy Female', 'Healthy Male', 'Diseased Female', 'Diseased Male']
-
-mean_sex_ABeta42 = [
-    x_health_fem_bar,
-    x_health_male_bar,
-    x_diseased_fem_bar,
-    x_diseased_male_bar
-]
-
-stdev_sex_ABeta42 = [
-    ABeta_health_fem_stdev,
-    ABeta_health_male_stdev,
-    ABeta_diseased_fem_stdev,
-    ABeta_diseased_male_stdev
-]
-
-colors = ["red", "blue", "pink", "skyblue"]
-yerr = [np.zeros(len(mean_sex_ABeta42)), stdev_sex_ABeta42]
-
-# Runs a one-way ANOVA
-f_stat, p_value = stats.f_oneway(
-    ABeta42_health_fem_vals,
-    ABeta42_health_male_vals,
-    ABeta42_diseased_fem_vals,
-    ABeta42_diseased_male_vals
-)
-
-# prints the f-stat and p value
-print("F-statistic:", f_stat)
-print("p-value:", p_value)
-
-# creates bar graph
-plt.text(
-    1.5,
-    380,
-    f"One-Way-ANOVA: p = {p_value:.3f}",
-    ha='right',
-    va='top',
-    fontsize=12
-)
-
-plt.bar(
-    sex_cols,
-    mean_sex_ABeta42,
-    yerr=yerr,
-    capsize=10,
-    color=["red", "blue", "pink", "skyblue"]
-)
-
-plt.title("ABeta42 Levels")
-plt.xlabel("Sex and Health Status")
-plt.ylabel("Abeta42")
-
-# outputs the resulting bar graph
+# outputs the resulting scatterplot
 plt.show()
-
-# saves the bar graph as a .png file
-plt.savefig("sex_and_cog_status_bar_graph")
 
 # creates empty lists for pTAU and MMSE
 ptau_mmse = []
@@ -406,7 +330,7 @@ plt.text(
 )
 
 # saves the scatterplot as a .png file
-plt.savefig("ptau_vs_mmse_regression.png")
+plt.savefig("ptau_vs_mmse_scatterplot.png")
 
 # outputs the resulting scatterplot
 plt.show()
