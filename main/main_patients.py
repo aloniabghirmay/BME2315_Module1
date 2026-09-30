@@ -1,5 +1,4 @@
 import csv
-import math as math
 class Patient:
 
     # a list containing all patients as they are made
